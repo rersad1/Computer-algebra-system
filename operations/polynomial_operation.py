@@ -4,6 +4,7 @@ from operations.integer_operations import IntegerOperations
 from operations.natural_operations import NaturalOperations
 
 class PolynomialOperations:
+    # P-1 Разработчик:Раутио.И
     @staticmethod
     def ADD_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -42,6 +43,7 @@ class PolynomialOperations:
 
         return result
 
+    # P-2 Разработчик:Потоцкий.С
     @staticmethod
     def SUB_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -84,6 +86,7 @@ class PolynomialOperations:
 
         return result
 
+    # P-3 Разработчик:Березовский.М
     @staticmethod
     def MUL_PQ_P(poly: Polynomial, q: Rational) -> Polynomial:
         """
@@ -108,6 +111,7 @@ class PolynomialOperations:
 
         return result
 
+    # P-4 Разработчик: Тимошук.Е
     @staticmethod
     def MUL_Pxk_P(poly: Polynomial, k: Natural) -> Polynomial: # проверено
         """
@@ -134,8 +138,9 @@ class PolynomialOperations:
 
         return result
 
+    # P-5 Разработчик:Потапов.Р
     @staticmethod
-    def LED_P_Q(poly: Polynomial) -> Rational:
+    def LED_P_Q(poly: Polynomial) -> Rational: #проверено
         """
         Возвращает старший коэффициент многочлена.
 
@@ -155,6 +160,7 @@ class PolynomialOperations:
 
         return leading_coefficient
 
+    # P-6 Разработчик:Потоцкий.С
     @staticmethod
     def DEG_P_N(poly: Polynomial) -> Natural: # проверено
         """
@@ -174,6 +180,7 @@ class PolynomialOperations:
 
         return max_degree
 
+    # P-7 Разработчик:Потапов.Р
     @staticmethod
     def FAC_P_Q(poly: Polynomial) -> Rational:
         """
@@ -215,6 +222,7 @@ class PolynomialOperations:
         answer = Rational(gcd_result, lcm_result)    
         return answer
 
+    # P-8 Разработчик:Потапов.Р
     @staticmethod
     def MUL_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -246,43 +254,48 @@ class PolynomialOperations:
 
         return result_poly
 
+    # P-9 Разработчик:Раутио.И
     @staticmethod
     def DIV_PP_P(dividend: Polynomial, divisor: Polynomial) -> Polynomial:
         """
         Деление многочлена на многочлен без остатка.
         """
         quotient = Polynomial()
-        temp_dividend = dividend
-        temp_count = 0
-        while temp_dividend.head and int(temp_dividend.head.degree) >= int(divisor.head.degree):
-            # Получение старших членов делимого и делителя
-            dividend_current = temp_dividend.head
-            while dividend_current.next:
-                dividend_current = dividend_current.next
-
-            divisor_current = divisor.head
-            while divisor_current.next:
-                divisor_current = divisor_current.next
-
-            if int(dividend_current.degree) >= int(divisor_current.degree):
-                # Вычисляем коэффициент и разность степеней
-                quotient_coeff = RationalOperations.DIV_QQ_Q(dividend_current.coefficient, divisor_current.coefficient)
-                degree_diff = NaturalOperations.SUB_NN_N(dividend_current.degree, divisor_current.degree)
-                quotient.add_term(degree_diff, quotient_coeff)
-
-                # Умножаем делитель на текущий член частного
-                temp_poly = PolynomialOperations.MUL_Pxk_P(divisor, degree_diff)
-                temp_poly = PolynomialOperations.MUL_PQ_P(temp_poly, quotient_coeff)
-
-                temp_dividend = PolynomialOperations.SUB_PP_P(temp_dividend, temp_poly)
-
-            temp_count += 1
-            # Если после вычитания `temp_dividend` стал нулем, выходим из цикла
-            if not temp_dividend.head or int(temp_dividend.head.degree) < int(divisor.head.degree) or temp_count > 100:
+        temp_dividend = create_polynomial(str(dividend))
+        
+        while True:
+            # Получаем степени текущих многочленов
+            dividend_deg = PolynomialOperations.DEG_P_N(temp_dividend)
+            divisor_deg = PolynomialOperations.DEG_P_N(divisor)
+            
+            # Если степень делимого меньше степени делителя - завершаем
+            if int(dividend_deg) < int(divisor_deg):
                 break
-
+                
+            # Получаем старшие коэффициенты
+            dividend_coef = PolynomialOperations.LED_P_Q(temp_dividend)
+            divisor_coef = PolynomialOperations.LED_P_Q(divisor)
+            
+            # Вычисляем коэффициент и разность степеней для текущего члена частного
+            quotient_coef = RationalOperations.DIV_QQ_Q(dividend_coef, divisor_coef)
+            degree_diff = Natural(str(int(dividend_deg) - int(divisor_deg)))
+            
+            # Добавляем новый член в частное
+            quotient.add_term(degree_diff, quotient_coef)
+            
+            # Вычитаем из делимого произведение делителя на полученный член
+            temp_poly = PolynomialOperations.MUL_Pxk_P(divisor, degree_diff)
+            temp_poly = PolynomialOperations.MUL_PQ_P(temp_poly, quotient_coef)
+            temp_dividend = PolynomialOperations.SUB_PP_P(temp_dividend, temp_poly)
+            
+            # Если делимое стало нулем - завершаем
+            if str(temp_dividend) == "0":
+                break
+                
         return quotient
 
+
+    # P-10 Разработчик:Раутио.И
     @staticmethod
     def MOD_PP_P(dividend: Polynomial, divisor: Polynomial) -> Polynomial:
         """
@@ -294,38 +307,39 @@ class PolynomialOperations:
         """
         # Вычисляем частное
         quotient = PolynomialOperations.DIV_PP_P(dividend, divisor)
+        print(quotient)
         # Вычисляем вычитаемое
-        deductible = PolynomialOperations.MUL_PP_P(quotient, divisor)   
-        # Получаем остаток    
+        deductible = PolynomialOperations.MUL_PP_P(quotient, divisor)
+        # Получаем остаток
         remainder = PolynomialOperations.SUB_PP_P(dividend, deductible)
-        
         return remainder
 
+    # P-11 Разработчик:Потоцкий.С
     @staticmethod
     def GCF_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
-        Находит наибольший общий делитель (НОД) двух многочленов.
-
-        :param poly1: Первый многочлен.
-        :param poly2: Второй многочлен.
-        :return: НОД двух многочленов.
+        Поиск НОД двух многочленов на основе алгоритма Евклида.
         """
-        # Применяем алгоритм Евклида для многочленов
-        coefficient = PolynomialOperations.DEG_P_N(poly2)
-        string_answer = NaturalOperations.NZER_N_B(coefficient)
-        counter = 0
-        while string_answer == "да":
-            # Находим остаток от деления poly1 на poly2
-            remainder = PolynomialOperations.MOD_PP_P(poly1, poly2)
-            # Обновляем poly1 и poly2 для следующего шага алгоритма
-            poly1, poly2 = poly2, remainder
-            print(poly1, poly2)
-            coefficient = PolynomialOperations.DEG_P_N(poly2)
-            string_answer = NaturalOperations.NZER_N_B(coefficient)
-            if counter > 100:
-                break
-        return poly1  # НОД - это последний ненулевой остаток
 
+        # Создаём копии исходных многочленов (предполагается наличие метода makePolynomial или аналогичного)
+        pln1 = create_polynomial(str(poly1))
+        pln2 = create_polynomial(str(poly2))
+        temp_count = 0
+        # Пока второй многочлен не равен нулю, продолжаем искать остаток и свапать
+        while str(pln2) != "0" and temp_count < 100:
+            temp = PolynomialOperations.MOD_PP_P(pln1, pln2)       
+            pln1, pln2 = pln2, temp
+            print(pln1)
+            print(pln2)
+            temp_count += 1
+        # Если старший коэффициент итогового многочлена отрицательный — домножаем на -1
+        deg = PolynomialOperations.DEG_P_N(pln1)
+        lead_coeff = pln1.getCoeff(deg)  # метод getCoeff(degree) нужно реализовать в классе Polynomial
+        if int(lead_coeff.numerator) < 0:
+            pln1 = PolynomialOperations.MUL_PQ_P(pln1, Rational(Integer("-1"), Natural("1")))
+
+        return pln1
+    # P-12 Разработчик:Потоцкий.С
     @staticmethod
     def DER_P_P(poly: Polynomial) -> Polynomial:
         """
@@ -340,7 +354,6 @@ class PolynomialOperations:
         while current:
             degree = current.degree
             coefficient = current.coefficient
-
             # Если степень больше 0, вычисляем производную одночлена
             if int(degree) > 0:
                 # Производная одночлена a * x^n равна a * n * x^(n-1)
@@ -353,6 +366,7 @@ class PolynomialOperations:
 
         return derivative
 
+    # P-13 Разработчик:Тимошук.Е
     @staticmethod
     def NMR_P_P(poly: Polynomial) -> Polynomial:
         """
@@ -372,3 +386,13 @@ class PolynomialOperations:
 
         return result_poly
 
+
+if __name__ == "__main__":
+    poly1 = create_polynomial("x^4 + 3x^3 - x^2 - 4x - 3")
+    poly2 = create_polynomial("3x^3 + 10x^2 + 2x - 3")
+    # dely = PolynomialOperations.DIV_PP_P(poly1, poly2)
+    # print(dely, "dely")
+    # ost = PolynomialOperations.MOD_PP_P(poly1, poly2)
+    # print(ost)
+    result = PolynomialOperations.GCF_PP_P(poly1, poly2)
+    print(result)
