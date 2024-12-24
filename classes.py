@@ -166,8 +166,11 @@ class Polynomial:
             coeff = terms[degree]
 
             # Определяем знак для вывода
-            sign = (" - " if int(coeff.numerator) < 0 else
-                    (" + " if i != 0 else ""))
+            # Для первого члена просто минус без пробела, для остальных с пробелами
+            if i == 0:
+                sign = "-" if int(coeff.numerator) < 0 else ""
+            else:
+                sign = " - " if int(coeff.numerator) < 0 else " + "
 
             # Модуль числителя
             abs_num = abs(int(coeff.numerator))
@@ -179,9 +182,9 @@ class Polynomial:
                 coeff_str = str(abs_num)
 
             # Формируем одночлен
-            if degree > 1:
+            if int(degree) > 1:
                 monomial = f"{coeff_str}x^{degree}"
-            elif degree == 1:
+            elif int(degree) == 1:
                 monomial = f"{coeff_str}x"
             else:  # degree == 0
                 monomial = coeff_str
@@ -262,6 +265,18 @@ class Polynomial:
                 
             except ValueError as e:
                 raise ValueError(f"Ошибка при разборе коэффициента '{coeff}': {str(e)}")
+
+    def getCoeff(self, deg: Natural) -> Rational:
+        if not isinstance(deg, Natural):
+            raise ValueError("Степень должна быть объектом класса Natural.")
+        
+        current = self.head
+        while current:
+            if current.degree == deg:
+                return current.coefficient
+            current = current.next
+        
+        return Rational(Integer("0"), Natural("1"))        
     
     def __eq__(self, other):
         if not isinstance(other, Polynomial):
@@ -282,5 +297,46 @@ def create_polynomial(input_str: str) -> Polynomial:
     return poly
 
 
+# poly1 = create_polynomial("100x^243 - 30000x + 6789")
+# print(f"{poly1}")
+# poly2 = create_polynomial("x^3 - x + 2")
+# poly3 = create_polynomial("-2x^4 + 7")
+# print(f"Polynomial from '3x^2 + 4x - 5': {poly1}")
+# print(f"Polynomial from 'x^3 - x + 2': {poly2}")
+# print(f"Polynomial from '-2x^4 + 7': {poly3}")
 
+# def test_polynomial():
+#     print("=== Тестирование класса Polynomial ===")
+#
+#     try:
+#         # Тест создания многочлена из строки
+#         print("\nСоздание многочлена из строки: '3x^2 + 4x - 5'")
+#         poly1 = create_polynomial("3x^2 + 4x - 5")
+#         print(f"Многочлен 1: {poly1}")
+#
+#         # Тест добавления члена
+#         print("\nДобавление члена 2x^3 в многочлен")
+#         poly1.add_term(Natural("3"), Rational(Integer("2")))  # Добавляем 2x^3
+#         print(f"После добавления: {poly1}")
+#
+#         # Тест создания второго многочлена
+#         print("\nСоздание второго многочлена из строки: 'x^3 - x + 2'")
+#         poly2 = create_polynomial("x^3 - x + 2")
+#         print(f"Многочлен 2: {poly2}")
+#
+#         # Проверка строкового представления многочленов
+#         print("\nСтроковое представление многочленов:")
+#         print(f"Многочлен 1: {str(poly1)}")
+#         print(f"Многочлен 2: {str(poly2)}")
+#
+#         poly3 = create_polynomial("6")
+#         poly3.add_term(Natural("0"), Rational(Integer("4")))
+#         print(poly3)
+#
+#     except Exception as e:
+#         print(f"Ошибка при тестировании: {e}")
+#
+#
+# if __name__ == "__main__":
+#     test_polynomial()
 
