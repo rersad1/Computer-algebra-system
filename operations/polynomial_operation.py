@@ -385,14 +385,3 @@ class PolynomialOperations:
         result_poly = PolynomialOperations.DIV_PP_P(poly, gcd_poly)
 
         return result_poly
-
-
-if __name__ == "__main__":
-    poly1 = create_polynomial("x^4 + 3x^3 - x^2 - 4x - 3")
-    poly2 = create_polynomial("3x^3 + 10x^2 + 2x - 3")
-    # dely = PolynomialOperations.DIV_PP_P(poly1, poly2)
-    # print(dely, "dely")
-    # ost = PolynomialOperations.MOD_PP_P(poly1, poly2)
-    # print(ost)
-    result = PolynomialOperations.GCF_PP_P(poly1, poly2)
-    print(result)
