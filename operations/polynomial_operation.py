@@ -4,7 +4,6 @@ from operations.integer_operations import IntegerOperations
 from operations.natural_operations import NaturalOperations
 
 class PolynomialOperations:
-    # P-1 Разработчик:Раутио.И
     @staticmethod
     def ADD_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -43,7 +42,6 @@ class PolynomialOperations:
 
         return result
 
-    # P-2 Разработчик:Потоцкий.С
     @staticmethod
     def SUB_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -86,7 +84,6 @@ class PolynomialOperations:
 
         return result
 
-    # P-3 Разработчик:Березовский.М
     @staticmethod
     def MUL_PQ_P(poly: Polynomial, q: Rational) -> Polynomial:
         """
@@ -111,7 +108,6 @@ class PolynomialOperations:
 
         return result
 
-    # P-4 Разработчик: Тимошук.Е
     @staticmethod
     def MUL_Pxk_P(poly: Polynomial, k: Natural) -> Polynomial: # проверено
         """
@@ -138,7 +134,6 @@ class PolynomialOperations:
 
         return result
 
-    # P-5 Разработчик:Потапов.Р
     @staticmethod
     def LED_P_Q(poly: Polynomial) -> Rational: #проверено
         """
@@ -160,7 +155,6 @@ class PolynomialOperations:
 
         return leading_coefficient
 
-    # P-6 Разработчик:Потоцкий.С
     @staticmethod
     def DEG_P_N(poly: Polynomial) -> Natural: # проверено
         """
@@ -180,7 +174,6 @@ class PolynomialOperations:
 
         return max_degree
 
-    # P-7 Разработчик:Потапов.Р
     @staticmethod
     def FAC_P_Q(poly: Polynomial) -> Rational:
         """
@@ -222,7 +215,6 @@ class PolynomialOperations:
         answer = Rational(gcd_result, lcm_result)    
         return answer
 
-    # P-8 Разработчик:Потапов.Р
     @staticmethod
     def MUL_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -254,7 +246,6 @@ class PolynomialOperations:
 
         return result_poly
 
-    # P-9 Разработчик:Раутио.И
     @staticmethod
     def DIV_PP_P(dividend: Polynomial, divisor: Polynomial) -> Polynomial:
         """
@@ -294,8 +285,6 @@ class PolynomialOperations:
                 
         return quotient
 
-
-    # P-10 Разработчик:Раутио.И
     @staticmethod
     def MOD_PP_P(dividend: Polynomial, divisor: Polynomial) -> Polynomial:
         """
@@ -314,7 +303,6 @@ class PolynomialOperations:
         remainder = PolynomialOperations.SUB_PP_P(dividend, deductible)
         return remainder
 
-    # P-11 Разработчик:Потоцкий.С
     @staticmethod
     def GCF_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
@@ -339,7 +327,7 @@ class PolynomialOperations:
             pln1 = PolynomialOperations.MUL_PQ_P(pln1, Rational(Integer("-1"), Natural("1")))
 
         return pln1
-    # P-12 Разработчик:Потоцкий.С
+
     @staticmethod
     def DER_P_P(poly: Polynomial) -> Polynomial:
         """
@@ -366,7 +354,6 @@ class PolynomialOperations:
 
         return derivative
 
-    # P-13 Разработчик:Тимошук.Е
     @staticmethod
     def NMR_P_P(poly: Polynomial) -> Polynomial:
         """
