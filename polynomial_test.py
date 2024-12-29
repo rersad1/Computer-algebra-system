@@ -55,7 +55,7 @@ class TestPolynomialOperations(unittest.TestCase):
 
     def test_large_polynomials_derivative(self):
         # Генерация больших многочленов для вычисления производной
-        poly_large = create_polynomial(" + ".join([f"{i}x^{i}" for i in range(250, 0, -1)]))
+        poly_large = create_polynomial(" + ".join([f"{i}x^{i}" for i in range(500, 0, -1)]))
 
         start_time = time.time()
         result = PolynomialOperations.DER_P_P(poly_large)

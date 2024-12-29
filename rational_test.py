@@ -100,8 +100,7 @@ class TestRationalOperations(unittest.TestCase):
         # Ожидаемый результат: (3/4) / (2/5) = (3/4) * (5/2) = 15/8
         expected = Rational(Integer("15"), Natural("8"))
 
-        self.assertEqual(result.numerator, expected.numerator)
-        self.assertEqual(result.denominator, expected.denominator)
+        self.assertEqual(result, expected)
 
     def test_large_rational_operations(self):
         # Бенчмарк для сложения больших рациональных чисел

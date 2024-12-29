@@ -4,31 +4,32 @@ from operations.integer_operations import IntegerOperations
 
 class RationalOperations:
     @staticmethod
-    def RED_Q_Q(fraction):
-        """
-        Сокращение дроби.
-        """
-        if fraction.numerator == Integer("0"):
-            return Rational(fraction.numerator, Natural("1"))
-        is_negative_numerator = IntegerOperations.POZ_Z_D(fraction.numerator)
-        # Применяем ABS_Z_N для числителя и знаменателя
+    def RED_Q_Q(fraction: Rational) -> Rational:
+        """Оптимизированное сокращение дроби"""
+        # Быстрая проверка на ноль
+        if fraction.numerator.digits == [0]:
+            return Rational(Integer("0"), Natural("1"))
+            
+        # Находим НОД напрямую, без преобразования типов
         abs_numerator = IntegerOperations.ABS_Z_N(fraction.numerator)
-        abs_denominator = IntegerOperations.ABS_Z_N(fraction.denominator)
-
-        # Находим наибольший общий делитель (gcd) между абсолютными значениями
-        gcd = NaturalOperations.GCF_NN_N(abs_numerator, abs_denominator)
-
-        # Получаем сокращенный числитель и знаменатель
-        reduced_numerator = NaturalOperations.DIV_NN_N(abs_numerator, gcd)
-        reduced_denominator = NaturalOperations.DIV_NN_N(abs_denominator, gcd)
-
-        # Создаем сокращенную дробь с правильным знаком
-        if is_negative_numerator == 1:
-            reduced_fraction = Rational(IntegerOperations.MUL_ZM_Z(Integer(str(reduced_numerator))), reduced_denominator)
-        else:
-            reduced_fraction = Rational(Integer(str(reduced_numerator)), Natural(str(reduced_denominator)))
-
-        return reduced_fraction
+        gcd = NaturalOperations.GCF_NN_N(abs_numerator, fraction.denominator)
+        # Если НОД == 1, дробь несократима
+        if gcd.digits == [1]:
+            return fraction
+            
+        # Делим числитель и знаменатель на НОД
+        reduced_denominator = NaturalOperations.DIV_NN_N(fraction.denominator, gcd)
+        
+        # Сохраняем знак числителя
+        is_negative = fraction.numerator.is_negative
+        reduced_numerator_natural = NaturalOperations.DIV_NN_N(abs_numerator, gcd)
+        
+        # Создаем новый числитель с правильным знаком
+        reduced_numerator = Integer("0")
+        reduced_numerator.digits = reduced_numerator_natural.digits
+        reduced_numerator.is_negative = is_negative
+        
+        return Rational(reduced_numerator, reduced_denominator)
 
     @staticmethod
     def INT_Q_B(fraction: Rational) -> str: # проверено тестами работает
@@ -81,25 +82,27 @@ class RationalOperations:
 
     @staticmethod
     def ADD_QQ_Q(fraction1: Rational, fraction2: Rational) -> Rational:
-        """
-        Сложение двух дробей.
-        :param fraction1: Первая дробь (Rational).
-        :param fraction2: Вторая дробь (Rational).
-        :return: Сумма двух дробей (Rational).
-        """
-        # Находим наименьшее общее кратное (LCM) знаменателей
-        lcm_denominator = NaturalOperations.LCM_NN_N(fraction1.denominator, fraction2.denominator)
-
-        # Находим числители для новых дробей
-        new_numerator1 = IntegerOperations.MUL_ZZ_Z(fraction1.numerator, Integer(str(NaturalOperations.DIV_NN_N(lcm_denominator, fraction1.denominator))))
-        new_numerator2 = IntegerOperations.MUL_ZZ_Z(fraction2.numerator, Integer(str(NaturalOperations.DIV_NN_N(lcm_denominator, fraction2.denominator))))
+        """Оптимизированное сложение рациональных чисел"""
+        if fraction1.denominator == fraction2.denominator:
+            new_numerator = IntegerOperations.ADD_ZZ_Z(fraction1.numerator, fraction2.numerator)
+            result = RationalOperations.RED_Q_Q(Rational(new_numerator, fraction1.denominator))
+            return result
+        
+        # Находим НОК знаменателей
+        lcm = NaturalOperations.LCM_NN_N(fraction1.denominator, fraction2.denominator)
+        
+        # Вычисляем множители для числителей
+        mult1 = NaturalOperations.DIV_NN_N(lcm, fraction1.denominator)
+        mult2 = NaturalOperations.DIV_NN_N(lcm, fraction2.denominator)
+        
+        # Умножаем числители на соответствующие множители
+        new_num1 = IntegerOperations.MUL_ZZ_Z(fraction1.numerator, Integer(str(mult1)))
+        new_num2 = IntegerOperations.MUL_ZZ_Z(fraction2.numerator, Integer(str(mult2)))
         
         # Складываем числители
-        result_numerator = IntegerOperations.ADD_ZZ_Z(new_numerator1, new_numerator2)
-
-        # Возвращаем результат как новую дробь с общим знаменателем
-        final = RationalOperations.RED_Q_Q(Rational(result_numerator, lcm_denominator))
-        return final
+        result_num = IntegerOperations.ADD_ZZ_Z(new_num1, new_num2)
+        result = RationalOperations.RED_Q_Q(Rational(result_num, lcm))
+        return result
 
     @staticmethod
     def SUB_QQ_Q(fraction1: Rational, fraction2: Rational) -> Rational: #????
@@ -130,59 +133,32 @@ class RationalOperations:
 
     @staticmethod
     def MUL_QQ_Q(fraction1: Rational, fraction2: Rational) -> Rational:
-        """
-        Умножение двух рациональных чисел.
-        Корректно обрабатывает знаки при умножении рациональных чисел.
-        """
-        # Умножаем числители с сохранением знаков
+        """Оптимизированное умножение рациональных чисел"""
+        # Прямое умножение числителей и знаменателей
         new_numerator = IntegerOperations.MUL_ZZ_Z(fraction1.numerator, fraction2.numerator)
-        
-        # Умножаем знаменатели (всегда положительные)
         new_denominator = NaturalOperations.MUL_NN_N(fraction1.denominator, fraction2.denominator)
-        result = Rational(new_numerator, new_denominator)
-        return RationalOperations.RED_Q_Q(result)
+        result = RationalOperations.RED_Q_Q(Rational(new_numerator, new_denominator))
+        return result
 
     @staticmethod
     def DIV_QQ_Q(fraction1: Rational, fraction2: Rational) -> Rational:
-        """
-        Деление двух рациональных чисел.
-        fraction1 и fraction2 — экземпляры класса Rational (числитель, знаменатель).
-
-        :return: результат деления в виде новой рациональной дроби.
-        :raises ValueError: если знаменатель второй дроби равен нулю.
-        """
-        # Проверяем, что знаменатель второй дроби не равен нулю
-        if fraction2.numerator == Natural('0'):
-            raise ValueError("Нельзя делить на ноль.")
-
-        # Инвертируем вторую дробь
-        inverted_fraction2_numerator = fraction2.denominator
-        inverted_fraction2_denominator = fraction2.numerator
+        """Оптимизированное деление рациональных чисел"""
+        if fraction2.numerator == Integer("0"):
+            raise ValueError("Деление на ноль")
+            
+        # Вычисляем новый числитель и знаменатель
+        new_numerator = IntegerOperations.MUL_ZZ_Z(fraction1.numerator, 
+                                                Integer(str(fraction2.denominator)))
+        new_denominator = IntegerOperations.MUL_ZZ_Z(Integer(str(fraction1.denominator)), 
+                                                    fraction2.numerator)
         
-        # Определяем знаки числителей
-        is_negative_numerator1 = IntegerOperations.POZ_Z_D(fraction1.numerator)
-        is_negative_numerator2 = IntegerOperations.POZ_Z_D(fraction2.numerator)
+        # Определяем, должен ли быть результат отрицательным
+        result_is_negative = new_denominator.is_negative
         
-        # Умножаем числители и знаменатели
-        new_numerator = IntegerOperations.MUL_ZZ_Z(fraction1.numerator, Integer(str(inverted_fraction2_numerator)))
-        new_denominator = IntegerOperations.MUL_ZZ_Z(Integer(str(fraction1.denominator)), inverted_fraction2_denominator)
+        # Если знаменатель отрицательный, делаем его положительным и меняем знак числителя
+        if result_is_negative:
+            new_denominator = IntegerOperations.MUL_ZM_Z(new_denominator)  # Делаем знаменатель положительным
+            new_numerator = IntegerOperations.MUL_ZM_Z(new_numerator)      # Инвертируем знак числителя
         
-        # Определяем знак результата:
-        # Если оба числа отрицательные или оба положительные - результат положительный
-        # Если знаки разные - результат отрицательный
-        if (is_negative_numerator1 == 1 and is_negative_numerator2 == 1) or (is_negative_numerator1 == 2 and is_negative_numerator2 == 2):
-            # Оба отрицательные или оба положительные - результат положительный
-            new_numerator = IntegerOperations.ABS_Z_N(new_numerator)
-            new_denominator = IntegerOperations.ABS_Z_N(new_denominator)
-        elif is_negative_numerator1 == 0:
-            # Если одно из чисел ноль
-            new_numerator = Integer("0")
-        else:
-            # Знаки разные - результат отрицательный
-            new_numerator = IntegerOperations.ABS_Z_N(new_numerator)
-            new_numerator = IntegerOperations.MUL_ZM_Z(Integer(str(new_numerator)))
-            new_denominator = IntegerOperations.ABS_Z_N(new_denominator)
-        # Возвращаем результат как новую дробь
-        answer = RationalOperations.RED_Q_Q(Rational(Integer(str(new_numerator)), Natural(str(new_denominator))))
-        return answer
-    
+        result = RationalOperations.RED_Q_Q(Rational(new_numerator, new_denominator))
+        return result

@@ -29,8 +29,8 @@ class AlgebraSystemApp(tk.Tk):
                 "N-6 Умножение натурального числа на цифру": NaturalOperations.MUL_ND_N,
                 "N-7 Умножение натурального числа на 10^k, k-натуральное": NaturalOperations.MUL_Nk_N,
                 "N-8 Умножение натуральных чисел": NaturalOperations.MUL_NN_N,
-                "N-9 Вычитание из натурального другого натурального, умноженного на цифру для случая с неотрицательным результатом": NaturalOperations.SUB_NDN_N,
-                "N-10 Вычисление первой цифры деления большего натурального на меньшее, домноженное на 10^k": NaturalOperations.DIV_NN_Dk,
+                "N-9 Вычитание из натурального другого натурального, умноженного на цифру для случая с неотрицательным результатом": NaturalOperations.SUB_NN_N,
+                "N-10 Вычисление первой цифры деления большего натурального на меньш    ее, домноженное на 10^k": NaturalOperations.DIV_NN_Dk,
                 "N-11 Неполное частное от деления первого натурального числа на второе с остатком": NaturalOperations.DIV_NN_N,
                 "N-12 Остаток от деления первого натурального числа на второе натуральное": NaturalOperations.MOD_NN_N,
                 "N-13 НОД натуральных чисел": NaturalOperations.GCF_NN_N,
@@ -154,16 +154,40 @@ class AlgebraSystemApp(tk.Tk):
         self.progress.stop()
 
     def process_natural_number(self, module_function):
-        # Окно для ввода данных
         input_data = self.input_entry.get().strip()
         if not input_data:
             messagebox.showwarning("Ошибка", "Данные не введены.")
             return
 
         try:
-            # Преобразуем данные в натуральные числа
-            inputs = [Natural(x.strip()) for x in input_data.split(",")]
-            result = module_function(*inputs)
+            # Список функций с тремя аргументами
+            three_arg_functions = [
+                NaturalOperations.SUB_NDN_N,
+                NaturalOperations.DIV_NN_Dk
+            ]
+
+            inputs = [x.strip() for x in input_data.split(",")]
+            
+            if module_function in three_arg_functions:
+                if len(inputs) != 3:
+                    raise ValueError("Требуется три аргумента, разделенных запятыми")
+                    
+                if module_function == NaturalOperations.SUB_NDN_N:
+                    # Все аргументы - натуральные числа
+                    num1 = Natural(inputs[0])
+                    num2 = Natural(inputs[1])
+                    multiplier = Natural(inputs[2])
+                    result = module_function(num1, num2, multiplier)
+                elif module_function == NaturalOperations.DIV_NN_Dk:
+                    # Третий аргумент - целое число k
+                    num1 = Natural(inputs[0])
+                    num2 = Natural(inputs[1])
+                    k = int(inputs[2])
+                    result = module_function(num1, num2, k)
+            else:
+                # Стандартная обработка для функций с 1-2 аргументами
+                inputs = [Natural(x) for x in inputs]
+                result = module_function(*inputs)
 
             self.result_text.config(state="normal")
             self.result_text.delete("1.0", tk.END)
@@ -287,6 +311,7 @@ class AlgebraSystemApp(tk.Tk):
         except ValueError as e:
             messagebox.showwarning("Ошибка", str(e))
 
+    
 
 # Запуск приложения
 if __name__ == "__main__":

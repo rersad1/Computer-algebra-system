@@ -4,319 +4,343 @@ class NaturalOperations:
     @staticmethod
     def COM_NN_D(num1: Natural, num2: Natural) -> int:
         """
-        Сравнение двух натуральных чисел.
-        Возвращает:
-        - 2, если num1 > num2
-        - 1, если num1 < num2
-        - 0, если num1 == num2
+        Сравнение натуральных чисел: 2 - если первое больше второго, 
+        0 - если равны, 1 - если первое меньше второго
         """
-        # Сначала сравниваем длину чисел (по количеству цифр)
-        if len(num1.digits) > len(num2.digits):
-            return 2  # Если первое число длиннее, оно больше
-        elif len(num1.digits) < len(num2.digits):
-            return 1  # Если первое число короче, оно меньше
-        else:
-            # Если длины чисел равны, сравниваем их цифры по порядку
-            for i in range(len(num1.digits)):
-                if num1.digits[i] > num2.digits[i]:
-                    return 2  # Если цифра в первом числе больше, возвращаем 2
-                elif num1.digits[i] < num2.digits[i]:
-                    return 1  # Если цифра в первом числе меньше, возвращаем 1
-            return 0  # Если все цифры одинаковые, числа равны
+        if len(num1.digits) != len(num2.digits):
+            return 2 if len(num1.digits) > len(num2.digits) else 1
+        # Используем zip для эффективного сравнения
+        for d1, d2 in zip(num1.digits, num2.digits):
+            if d1 != d2:
+                return 2 if d1 > d2 else 1
+        return 0
 
     @staticmethod
     def NZER_N_B(num: Natural) -> str:
         """
-        Проверка на ноль: если число не равно нулю, то «да», иначе «нет»
+        Проверка на ноль: если число не равно нулю, то "да",
+        если число равно нулю, то "нет"
         """
-        # Если число состоит только из одной цифры 0, то оно равно нулю
-        if len(num.digits) == 1 and num.digits[0] == 0:
-            return "нет"  # Число равно нулю
-        return "да"  # Число не равно нулю
+        return "нет" if len(num.digits) == 1 and num.digits[0] == 0 else "да"
 
     @staticmethod
     def ADD_1N_N(num: Natural) -> Natural:
         """
-        Добавление 1 к натуральному числу.
+        Добавление 1 к натуральному числу
         """
-        carry = 1  # Перенос (начальный перенос 1)
-        result_digits = num.digits[::-1]  # Переворачиваем список цифр для удобства
-
-        # Процесс добавления 1 с учетом переноса
-        for i in range(len(result_digits)):
-            result_digits[i] += carry  # Добавляем перенос
-            if result_digits[i] == 10:  # Если получилось 10, то ставим 0 и переносим 1 дальше
-                result_digits[i] = 0
-                carry = 1
-            else:
-                carry = 0  # Если перенос не нужен, завершаем операцию
-                break
-
-        # Если перенос остался (например, для числа 999 + 1), добавляем его в конец
-        if carry == 1:
-            result_digits.append(1)
-
-        result_digits.reverse()  # Возвращаем порядок цифр в нормальное состояние
-        return Natural(''.join(map(str, result_digits)))  # Формируем новое число из цифр и возвращаем
+        result = Natural("0")
+        result.digits = num.digits.copy()
+        
+        # Ищем самую правую цифру, не равную 9
+        i = len(result.digits) - 1
+        while i >= 0 and result.digits[i] == 9:
+            result.digits[i] = 0
+            i -= 1
+            
+        # Если все цифры были 9, добавляем 1 в начало
+        if i < 0:
+            result.digits.insert(0, 1)
+        else:
+            result.digits[i] += 1
+            
+        return result
 
     @staticmethod
     def ADD_NN_N(num1: Natural, num2: Natural) -> Natural:
         """
-        Сложение двух натуральных чисел.
+        Сложение двух натуральных чисел
         """
-        carry = 0  # Начальный перенос равен 0
-        result_digits = []  # Массив для хранения результата сложения
-
-        len1, len2 = len(num1.digits), len(num2.digits)  # Длины чисел
-        max_len = max(len1, len2)  # Определяем максимальную длину
-
-        # Процесс сложения с учетом переноса
-        for i in range(max_len):
-            # Если цифры не хватает, считаем их как 0
-            digit1 = num1.digits[len1 - i - 1] if i < len1 else 0
-            digit2 = num2.digits[len2 - i - 1] if i < len2 else 0
-
-            total = digit1 + digit2 + carry  # Сложение цифр с учетом переноса
-            result_digits.append(total % 10)  # Добавляем младший разряд к результату
-            carry = total // 10  # Перенос на старший разряд
-
+        result = Natural("0")
+        max_len = max(len(num1.digits), len(num2.digits))
+        # Выделяем память с учетом возможного переноса в старший разряд
+        result.digits = [0] * (max_len + 1)
+        
+        # Получаем прямой доступ к массивам цифр для оптимизации
+        d1 = num1.digits
+        d2 = num2.digits
+        carry = 0
+        i = 1
+        
+        # Складываем числа поразрядно справа налево
+        while i <= max_len:
+            # Берем цифры с конца или 0, если разряд закончился
+            v1 = d1[-i] if i <= len(d1) else 0
+            v2 = d2[-i] if i <= len(d2) else 0
+            total = v1 + v2 + carry
+            result.digits[-i] = total % 10  # Записываем остаток
+            carry = total // 10  # Вычисляем перенос
+            i += 1
+            
+        # Обрабатываем последний перенос или убираем ведущий ноль
         if carry:
-            result_digits.append(carry)  # Если есть перенос в самый старший разряд, добавляем его
-
-        result_digits.reverse()  # Переворачиваем цифры для правильного порядка
-        return Natural(''.join(map(str, result_digits)))  # Формируем результат из цифр и возвращаем
+            result.digits[0] = carry
+        else:
+            result.digits.pop(0)
+        return result
 
     @staticmethod
     def SUB_NN_N(num1: Natural, num2: Natural) -> Natural:
         """
-        Вычитание из первого большего натурального числа второго меньшего или равного.
+        Вычитание из первого большего натурального числа второго меньшего
+        или равного
         """
-        # Проверка, что первое число больше или равно второму
+        # Проверяем, что первое число больше второго
         if NaturalOperations.COM_NN_D(num1, num2) == 1:
-            raise ValueError("Первое число должно быть больше или равно второму.")
+            raise ValueError("First number should be greater")
 
-        # Если числа равны, возвращаем ноль
-        if NaturalOperations.COM_NN_D(num1, num2) == 0:
-            return Natural("0")
+        result = []
+        borrow = 0
+        # Копируем цифры первого числа
+        digits1 = num1.digits.copy()
+        # Дополняем нулями второе число слева до длины первого
+        digits2 = [0] * (len(digits1) - len(num2.digits)) + num2.digits
 
-        result_digits = []  # Массив для хранения результата
-        borrow = 0  # Переменная для учета заимствования (занимания)
-
-        # Процесс вычитания по разрядам
-        for i in range(1, len(num1.digits) + 1):
-            digit1 = num1.digits[-i]  # Цифра из первого числа
-            digit2 = num2.digits[-i] if i <= len(num2.digits) else 0  # Цифра из второго числа (если есть)
-
-            diff = digit1 - digit2 - borrow  # Разность цифр с учетом заимствования
-            if diff < 0:  # Если результат отрицательный, "занимаем" единицу
+        # Вычитаем поразрядно справа налево
+        for i in range(len(digits1) - 1, -1, -1):
+            diff = digits1[i] - digits2[i] - borrow
+            # Если разность отрицательная, занимаем 10 из следующего разряда
+            if diff < 0:
                 diff += 10
                 borrow = 1
             else:
-                borrow = 0  # Если нет заимствования, сбрасываем его
+                borrow = 0
+            result.insert(0, diff)
 
-            result_digits.append(diff)  # Добавляем разность в результат
+        # Убираем ведущие нули
+        while len(result) > 1 and result[0] == 0:
+            result.pop(0)
 
-        # Разворачиваем результат, убираем ведущие нули
-        result_digits.reverse()
-        result_str = ''.join(map(str, result_digits)).lstrip("0")  # Преобразуем результат в строку
-
-        return Natural(result_str or "0")  # Если результат пустой, возвращаем "0"
+        new_natural = Natural("0")
+        new_natural.digits = result
+        return new_natural
 
     @staticmethod
-    def MUL_ND_N(num: Natural, digit: Natural) -> Natural:
+    def MUL_ND_N(num: Natural, digit: int) -> Natural:
         """
-        Умножение натурального числа на цифру (от 0 до 9).
+        Умножение натурального числа на цифру
         """
-        digit = digit.__int__()
-        # Проверка, что цифра находится в допустимом диапазоне
-        if not (0 <= digit <= 9):
-            raise ValueError("Цифра должна быть в пределах от 0 до 9.")
-
-        result_digits = []  # Массив для хранения результата умножения
-        carry = 0  # Начальный перенос равен 0
-
-        # Умножаем каждую цифру числа на заданную цифру
+        # Особые случаи умножения на 0 и 1
+        if digit == 0:
+            return Natural("0")
+        if digit == 1:
+            result = Natural("0")
+            result.digits = num.digits.copy()
+            return result
+            
+        result = Natural("0")
+        # Резервируем место для результата с учетом возможного переноса
+        result.digits = [0] * (len(num.digits) + 1)
+        carry = 0
+        
+        # Умножаем каждую цифру справа налево
         for i in range(len(num.digits) - 1, -1, -1):
-            temp_product = num.digits[i] * digit + carry  # Умножаем цифру и учитываем перенос
-            result_digits.append(temp_product % 10)  # Добавляем младший разряд
-            carry = temp_product // 10  # Перенос на старший разряд
-
-        # Если остался перенос, добавляем его в результат
+            prod = num.digits[i] * digit + carry
+            result.digits[i + 1] = prod % 10  # Записываем остаток
+            carry = prod // 10   # Вычисляем перенос
+            
+        # Обрабатываем последний перенос
         if carry:
-            result_digits.append(carry)
-
-        result_digits.reverse()  # Разворачиваем цифры в правильный порядок
-        return Natural(''.join(map(str, result_digits)))  # Формируем новое число и возвращаем
+            result.digits[0] = carry
+        else:
+            result.digits.pop(0)
+        return result
 
     @staticmethod
     def MUL_Nk_N(num: Natural, k: Natural) -> Natural:
         """
-        Умножение натурального числа на 10^k.
+        Умножение натурального числа на 10^k
         """
-        k = k.__int__()
-        # Проверка, что k - неотрицательное число
-        if k < 0:
-            raise ValueError("k должно быть натуральным числом (неотрицательным).")
+        # Преобразуем k в int, если это объект Natural
+        k_value = int(str(k)) if isinstance(k, Natural) else k
+        
+        # При умножении на 10^0 возвращаем исходное число
+        if k_value == 0:
+            return num
+        
+        result = Natural("0")
+        # Копируем цифры и добавляем k нулей справа
+        result.digits = num.digits.copy()
+        result.digits.extend([0] * k_value)
+        return result
 
-        if k == 0:
-            return num  # Если k равно 0, возвращаем исходное число
-
-        # Добавление k нулей в конец числа
-        result_digits = num.digits + [0] * k
-        return Natural(''.join(map(str, result_digits)))  # Возвращаем новое число с добавленными нулями
 
     @staticmethod
     def MUL_NN_N(num1: Natural, num2: Natural) -> Natural:
         """
-        Умножение двух натуральных чисел.
+        Умножение двух натуральных чисел
         """
-        result = Natural("0")  # Начальный результат - ноль
-
-        # Перебираем цифры второго числа (num2)
-        for i in range(len(num2.digits)):
-            digit = num2.digits[len(num2.digits) - i - 1]  # Берем цифру из второго числа
-            temp = NaturalOperations.MUL_ND_N(num1, digit)  # Умножаем первое число на эту цифру
-            temp = NaturalOperations.MUL_Nk_N(temp, i)  # Сдвигаем на разряд, умножив на 10^i
-            result = NaturalOperations.ADD_NN_N(result, temp)  # Прибавляем результат к общему
-
-        return result  # Возвращаем итоговый результат умножения
+        # Меняем числа местами, если второе длиннее
+        if len(num2.digits) > len(num1.digits):
+            num1, num2 = num2, num1
+            
+        # Проверка на умножение на ноль
+        if num2.digits == [0]:
+            return Natural("0")
+            
+        result = Natural("0")
+        # Выделяем память для результата с учетом максимально возможной длины
+        result.digits = [0] * (len(num1.digits) + len(num2.digits))
+        
+        # Умножаем каждую цифру второго числа на первое число
+        for i in range(len(num2.digits)-1, -1, -1):
+            if num2.digits[i] == 0:
+                continue
+            carry = 0
+            # Умножаем на каждую цифру первого числа
+            for j in range(len(num1.digits)-1, -1, -1):
+                pos = i + j + 1
+                prod = num2.digits[i] * num1.digits[j] + result.digits[pos] + carry
+                result.digits[pos] = prod % 10  # Записываем остаток
+                carry = prod // 10  # Запоминаем перенос
+            result.digits[i] = carry
+            
+        # Убираем ведущие нули
+        while len(result.digits) > 1 and result.digits[0] == 0:
+            result.digits.pop(0)
+        return result
 
     @staticmethod
-    def SUB_NDN_N(num1: Natural, num2: Natural, digit: Natural) -> Natural:
+    def SUB_NDN_N(num1: Natural, num2: Natural, multiplier: Natural) -> Natural:
         """
-        Вычитает из первого натурального числа результат умножения второго натурального числа на цифру.
-        """
-        digit = digit.__int__()
-        # Проверка, что цифра находится в допустимом диапазоне (от 0 до 9)
-        if digit < 0 or digit > 9:
-            raise ValueError("Цифра должна быть в пределах от 0 до 9.")
-
-        # Умножаем второе число на цифру
-        temp = NaturalOperations.MUL_ND_N(num2, digit)
-
-        # Проверяем, что результат вычитания не будет отрицательным
-        if NaturalOperations.COM_NN_D(num1, temp) < 0:
-            raise ValueError("Результат вычитания будет отрицательным.")
-
-        # Выполняем вычитание
-        return NaturalOperations.SUB_NN_N(num1, temp)
+        Вычитание из натурального числа другого натурального числа, умноженного на натуральное число
+        
+        Args:
+            num1 (Natural): Уменьшаемое
+            num2 (Natural): Вычитаемое (до умножения)
+            multiplier (Natural): Множитель
+            
+        Returns:
+            Natural: Результат вычитания (num1 - num2 * multiplier)
+        """    
+        product = NaturalOperations.MUL_NN_N(num2, multiplier)
+        return NaturalOperations.SUB_NN_N(num1, product)
 
     @staticmethod
     def DIV_NN_Dk(num1: Natural, num2: Natural, k: int) -> int:
         """
-        Вычисление первой цифры деления двух чисел,
-        домноженной на 10^k, где k — это номер позиции цифры.
+        Вычисление первой цифры деления большего натурального на меньшее, домноженное на 10^k
         """
-
-        # Преобразуем числа в строковое представление для удобства работы
-        larger_digits = ''.join(map(str, num1.digits))  # Переводим первое число в строку
-        smaller_digits = ''.join(map(str, num2.digits))  # Переводим второе число в строку
-
-        # Домножаем num2 на 10^k
-        num2_modified = NaturalOperations.MUL_Nk_N(num2, k)  # Умножаем второе число на 10^k
-        modified_smaller_digits = ''.join(map(str, num2_modified.digits))  # Преобразуем его в строку
-
-        # Выполняем деление
-        quotient = int(larger_digits) // int(modified_smaller_digits)  # Делим первое число на изменённое второе
-
-        # Извлекаем первую цифру от деления
-        first_digit = int(str(quotient)[0])  # Извлекаем первую цифру результата деления
-
-        return first_digit  # Возвращаем первую цифру результата
+        # Проверка корректности k
+        if k < 0:
+            raise ValueError("k must be non-negative")
+            
+        # Умножаем делитель на 10^k
+        scaled_num2 = NaturalOperations.MUL_Nk_N(num2, k)
+        print(f"Scaled num2: {scaled_num2}")
+        quotient = 0
+        
+        # Вычитаем делитель пока возможно
+        while NaturalOperations.COM_NN_D(num1, scaled_num2) >= 0:
+            num1 = NaturalOperations.SUB_NN_N(num1, scaled_num2)
+            quotient += 1
+            
+        return quotient
 
     @staticmethod
-    def DIV_NN_N(num1: Natural, num2: Natural) -> (Natural, Natural):
+    def DIV_NN_N(num1: Natural, num2: Natural) -> Natural:
         """
-        Деление первого натурального числа на второе с остатком.
-        Возвращает частное.
+        Целочисленное деление двух натуральных чисел
         """
-        # Проверка, что делитель не равен нулю
-        if NaturalOperations.NZER_N_B(num2) == "нет":
-            raise ValueError("Делитель не может быть нулём.")
+        # Проверка деления на ноль
+        if not num2.digits or num2.digits == [0]:
+            raise ValueError("Division by zero")
 
-        # Если первое число меньше второго, частное = 0, остаток = первое число
+        # Если делимое меньше делителя - результат 0
         if NaturalOperations.COM_NN_D(num1, num2) == 1:
-            return Natural("0"), num1  # Частное = 0, остаток = num1
+            return Natural("0")
 
-        quotient = []  # Список для хранения цифр частного
-        remainder = Natural("0")  # Текущий остаток
+        # Создаем копию делимого
+        dividend = Natural("0")
+        dividend.digits = num1.digits.copy()
+        result_digits = []
 
-        # Перебираем цифры num1 по разрядам
-        for digit in num1.digits:
-            # Увеличиваем остаток, добавляя текущую цифру из num1
-            remainder = NaturalOperations.ADD_NN_N(
-                NaturalOperations.MUL_Nk_N(remainder, 1),  # Умножаем остаток на 10 (сдвигаем разряд)
-                Natural(str(digit))  # Добавляем текущую цифру
-            )
+        # Обрабатываем каждую цифру делимого
+        temp_number = Natural("0")
+        temp_number.digits = []
 
-            current_digit = 0
-            # Пока остаток больше или равен делителю, вычитаем делитель из остатка
-            while NaturalOperations.COM_NN_D(remainder, num2) != 1:  # Пока остаток >= делителя
-                remainder = NaturalOperations.SUB_NN_N(remainder, num2)  # Вычитаем делитель
-                current_digit += 1  # Увеличиваем цифру частного
+        # Выполняем деление "столбиком"
+        for d in dividend.digits:
+            # Добавляем текущую цифру к временному числу
+            temp_number.digits = temp_number.digits + [d]
+            
+            # Убираем ведущие нули
+            while len(temp_number.digits) > 1 and temp_number.digits[0] == 0:
+                temp_number.digits.pop(0)
 
-            quotient.append(current_digit)  # Добавляем цифру частного в результат
+            # Находим цифру частного
+            quotient_digit = 0
+            while NaturalOperations.COM_NN_D(temp_number, num2) != 1:
+                temp_number = NaturalOperations.SUB_NN_N(temp_number, num2)
+                quotient_digit += 1
 
-        # Формируем строку из цифр частного
-        quotient_natural = Natural(''.join(map(str, quotient)))  # Преобразуем цифры в строку и в объект Natural
+            result_digits.append(quotient_digit)
 
-        return quotient_natural  # Возвращаем частное и остаток
+        # Убираем ведущие нули результата
+        while len(result_digits) > 1 and result_digits[0] == 0:
+            result_digits.pop(0)
+
+        result = Natural("0")
+        result.digits = result_digits
+        return result
 
     @staticmethod
     def MOD_NN_N(num1: Natural, num2: Natural) -> Natural:
         """
-        Вычисление остатка от деления первого натурального числа на второе.
-        Предполагается, что делитель (num2) не равен нулю.
+        Остаток от деления двух натуральных чисел
         """
-        # Проверка, что делитель не равен нулю
-        if NaturalOperations.NZER_N_B(num2) == "нет":
-            raise ValueError("Делитель не может быть нулём.")
-
-        # Если num1 меньше num2, то остаток равен num1
+        # Проверка деления на ноль
+        if not num2.digits or num2.digits == [0]:
+            raise ValueError("Division by zero")
+            
+        # Если первое число меньше второго, остаток равен первому числу
         if NaturalOperations.COM_NN_D(num1, num2) == 1:
             return num1
 
-        # Используем цикл для вычитания num2 из num1, пока num1 >= num2
-        remainder = num1
-        while NaturalOperations.COM_NN_D(remainder, num2) != 1:
-            # Находим первую цифру деления и вычитаем умноженное значение
-            digit = NaturalOperations.DIV_NN_Dk(remainder, num2, 0)
-            temp = NaturalOperations.MUL_ND_N(num2, digit)  # Умножаем num2 на цифру
-            remainder = NaturalOperations.SUB_NN_N(remainder, temp)  # Вычитаем из остатка
-
-        return remainder  # Возвращаем остаток от деления
+        # Находим частное от деления
+        quotient = NaturalOperations.DIV_NN_N(num1, num2)
+        
+        # Вычисляем остаток как разность делимого и произведения делителя на частное
+        reminder = NaturalOperations.SUB_NDN_N(num1, num2, quotient)
+        return reminder
 
     @staticmethod
-    def GCF_NN_N(num1: Natural, num2: Natural) -> Natural:
+    def GCF_NN_N(a: Natural, b: Natural) -> Natural:
         """
-        Вычисление наибольшего общего делителя (НОД) двух натуральных чисел.
-        Используется алгоритм Евклида.
+        Нахождение НОД двух натуральных чисел
         """
-        # Проверяем, не равен ли одно из чисел нулю
-        if NaturalOperations.NZER_N_B(num1) == "нет" or NaturalOperations.NZER_N_B(num2) == "нет":
-            raise ValueError("Число не может быть равно нулю.")
+        if NaturalOperations.NZER_N_B(a) == "нет" or NaturalOperations.NZER_N_B(b) == "нет":
+            raise ValueError("Numbers must be non-zero")
 
-        while True:
-            # Если num1 меньше num2, меняем их местами
-            if NaturalOperations.COM_NN_D(num1, num2) < 0:
-                num1, num2 = num2, num1
+        # Быстрая проверка равенства
+        if a.digits == b.digits:
+            return a
+        
+        # Реализация алгоритма Евклида без копий
+        while NaturalOperations.NZER_N_B(b) == "да":
+            if NaturalOperations.COM_NN_D(a, b) == 2:  # a > b
+                a = NaturalOperations.MOD_NN_N(a, b)
+            else:
+                b = NaturalOperations.MOD_NN_N(b, a)
 
-            # Получаем остаток от деления
-            remainder = NaturalOperations.MOD_NN_N(num1, num2)
-
-            # Если остаток равен нулю, то num2 является НОД
-            if NaturalOperations.COM_NN_D(remainder, Natural("0")) == 0:
-                return num2
-
-            # Если остаток не равен нулю, продолжаем с новым делителем
-            num1, num2 = num2, remainder
+            # Если одно из чисел стало нулем
+            if NaturalOperations.NZER_N_B(a) == "нет":
+                return b
+        
+        return a
 
     @staticmethod
     def LCM_NN_N(num1: Natural, num2: Natural) -> Natural:
         """
-        Вычисление наименьшего общего кратного (НОК).
+        Нахождение НОК двух натуральных чисел
         """
-        gcf = NaturalOperations.GCF_NN_N(num1, num2)  # Находим НОД
-        product = NaturalOperations.MUL_NN_N(num1, num2)  # Умножаем оба числа
-        lcm = NaturalOperations.DIV_NN_N(product, gcf)  # Делим произведение на НОД, чтобы получить НОК
-        return  lcm  # Возвращаем НОК
+        if NaturalOperations.NZER_N_B(num1) == "нет" or NaturalOperations.NZER_N_B(num2) == "нет":
+            raise ValueError("Numbers must be non-zero")
+            
+        # Находим произведение чисел
+        product = NaturalOperations.MUL_NN_N(num1, num2)
+        
+        # Находим НОД
+        gcd = NaturalOperations.GCF_NN_N(num1, num2)
+        
+        # НОК = произведение / НОД
+        return NaturalOperations.DIV_NN_N(product, gcd)

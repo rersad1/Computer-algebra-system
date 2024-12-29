@@ -1,289 +1,192 @@
-from classes import *
-from operations.rational_operations import RationalOperations
-from operations.integer_operations import IntegerOperations
-from operations.natural_operations import NaturalOperations
+from classes import *  # Импорт всех базовых классов, таких как Polynomial, Rational, Integer и другие
+from operations.rational_operations import RationalOperations  # Импорт операций с рациональными числами
+from operations.integer_operations import IntegerOperations  # Импорт операций с целыми числами
+from operations.natural_operations import NaturalOperations  # Импорт операций с натуральными числами
+
 
 class PolynomialOperations:
     @staticmethod
     def ADD_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
-        """
-        Сложение двух многочленов.
-        """
-        result = Polynomial()
+        """Сложение двух многочленов."""
+        result = Polynomial()  # Создаем новый пустой многочлен для результата
 
-        # Копируем первый многочлен в результат
-        current1 = poly1.head
-        while current1:
-            result.add_term(current1.degree, current1.coefficient)
-            current1 = current1.next
+        # Добавляем члены из первого многочлена
+        for degree, coeff in poly1.terms.items():
+            result.add_term(Natural(str(degree)), coeff)  # Добавляем каждый член в результирующий многочлен
 
-        # Добавляем члены второго многочлена
-        current2 = poly2.head
-        while current2:
-            found = False
-            current_result = result.head
-            
-            # Ищем член с такой же степенью в результате
-            while current_result:
-                if int(current_result.degree) == int(current2.degree):
-                    # Складываем коэффициенты
-                    new_coefficient = RationalOperations.ADD_QQ_Q(current_result.coefficient, current2.coefficient)
-                    # Обновляем коэффициент в результате
-                    current_result.coefficient = new_coefficient
-                    found = True
-                    break
-                current_result = current_result.next
-                
-            # Если не нашли член с такой степенью - добавляем новый
-            if not found:
-                result.add_term(current2.degree, current2.coefficient)
-                
-            current2 = current2.next
+        # Добавляем члены из второго многочлена
+        for degree, coeff in poly2.terms.items():
+            if degree in result.terms:  # Если степень уже есть в результате
+                new_coeff = RationalOperations.ADD_QQ_Q(result.terms[degree], coeff)  # Складываем коэффициенты
+                result.add_term(Natural(str(degree)), new_coeff)  # Обновляем коэффициент
+            else:  # Если степени нет в результате
+                result.add_term(Natural(str(degree)), coeff)  # Просто добавляем член
 
-        return result
+        return result  # Возвращаем результирующий многочлен
 
     @staticmethod
     def SUB_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
-        """
-        Вычитание двух многочленов через прямое вычитание коэффициентов.
-        """
-        result = Polynomial()
+        """Вычитание двух многочленов."""
+        result = Polynomial()  # Создаем новый пустой многочлен для результата
 
-        # Копируем первый многочлен в результат
-        current1 = poly1.head
-        while current1:
-            result.add_term(current1.degree, current1.coefficient)
-            current1 = current1.next
+        # Копируем члены из первого многочлена
+        for degree, coeff in poly1.terms.items():
+            result.add_term(Natural(str(degree)), coeff)  # Добавляем каждый член
 
         # Вычитаем члены второго многочлена
-        current2 = poly2.head
-        while current2:
-            found = False
-            current_result = result.head
-            
-            # Ищем член с такой же степенью в результате
-            while current_result:
-                if int(current_result.degree) == int(current2.degree):
-                    # Вычитаем коэффициенты используя SUB_QQ_Q
-                    new_coefficient = RationalOperations.SUB_QQ_Q(current_result.coefficient, current2.coefficient)
-                    # Обновляем коэффициент в результате
-                    current_result.coefficient = new_coefficient
-                    found = True
-                    break
-                current_result = current_result.next
-                
-            # Если не нашли член с такой степенью - добавляем новый с противоположным знаком
-            if not found:
-                neg_coef = Rational(
-                    IntegerOperations.MUL_ZM_Z(current2.coefficient.numerator),
-                    current2.coefficient.denominator
-                )
-                result.add_term(current2.degree, neg_coef)
-                
-            current2 = current2.next
+        for degree, coeff in poly2.terms.items():
+            neg_coeff = Rational(  # Инвертируем коэффициент
+                IntegerOperations.MUL_ZM_Z(coeff.numerator),
+                coeff.denominator
+            )
+            if degree in result.terms:  # Если степень уже есть в результате
+                new_coeff = RationalOperations.ADD_QQ_Q(result.terms[degree],
+                                                        neg_coeff)  # Складываем с отрицательным коэффициентом
+                result.add_term(Natural(str(degree)), new_coeff)  # Обновляем коэффициент
+            else:  # Если степени нет в результате
+                result.add_term(Natural(str(degree)), neg_coeff)  # Добавляем отрицательный коэффициент
 
-        return result
+        return result  # Возвращаем результирующий многочлен
 
     @staticmethod
     def MUL_PQ_P(poly: Polynomial, q: Rational) -> Polynomial:
-        """
-        Умножение многочлена на рациональное число.
-        """
-        result = Polynomial()
-        current = poly.head
-        
-        while current:
-            # Проверяем, что числитель коэффициента не равен 0
-            if int(current.coefficient.numerator) == 0:
-                current = current.next
-                continue
-                
-            # Умножаем коэффициент каждого одночлена на рациональное число
-            # Сохраняем оригинальный коэффициент без создания нового
-            multiplied_coeff = RationalOperations.MUL_QQ_Q(current.coefficient, q)
-            multiplied_coeff = RationalOperations.RED_Q_Q(multiplied_coeff)
-            # Добавляем результат умножения в новый многочлен
-            result.add_term(current.degree, multiplied_coeff)
-            current = current.next
+        """Умножение многочлена на рациональное число."""
+        result = Polynomial()  # Создаем новый пустой многочлен
 
-        return result
+        for degree, coeff in poly.terms.items():  # Проходим по всем членам многочлена
+            new_coeff = RationalOperations.MUL_QQ_Q(coeff, q)  # Умножаем коэффициент на рациональное число
+            result.add_term(Natural(str(degree)), new_coeff)  # Добавляем результат в многочлен
+
+        return result  # Возвращаем результирующий многочлен
 
     @staticmethod
-    def MUL_Pxk_P(poly: Polynomial, k: Natural) -> Polynomial: # проверено
-        """
-        Умножение многочлена на x^k.
+    def MUL_Pxk_P(poly: Polynomial, k: Natural) -> Polynomial:
+        """Умножение многочлена на x^k."""
+        result = Polynomial()  # Создаем новый пустой многочлен
+        k_int = int(k)  # Преобразуем натуральное число в целое
 
-        :param poly: Многочлен, который нужно умножить.
-        :param k: Натуральное число или 0, степень, на которую нужно умножить.
-        :return: Новый многочлен, результат умножения.
-        """
-        result = Polynomial()
+        for degree, coeff in poly.terms.items():  # Проходим по всем членам многочлена
+            new_degree = Natural(str(degree + k_int))  # Увеличиваем степень каждого члена на k
+            result.add_term(new_degree, coeff)  # Добавляем член с новой степенью в результат
 
-        current = poly.head
-
-        # Проходим по всем одночленам в многочлене
-        while current:
-            # Увеличиваем степень на k
-            new_degree = Natural(str(int(current.degree) + int(k)))
-
-            # Добавляем одночлен с новой степенью в новый многочлен
-            result.add_term(new_degree, current.coefficient)
-
-            # Переходим к следующему одночлену
-            current = current.next
-
-        return result
+        return result  # Возвращаем результирующий многочлен
 
     @staticmethod
-    def LED_P_Q(poly: Polynomial) -> Rational: #проверено
-        """
-        Возвращает старший коэффициент многочлена.
-
-        :param poly: Многочлен, для которого необходимо найти старший коэффициент.
-        :return: Старший коэффициент многочлена.
-        """
-        current = poly.head
-        max_degree = None
-        leading_coefficient = None
-
-        # Перебираем все одночлены многочлена
-        while current:
-            if max_degree is None or int(current.degree) > int(max_degree):
-                max_degree = current.degree
-                leading_coefficient = current.coefficient
-            current = current.next
-
-        return leading_coefficient
+    def LED_P_Q(poly: Polynomial) -> Rational:
+        """Возвращает старший коэффициент многочлена."""
+        return poly.get_leading_coeff()  # Получаем и возвращаем старший коэффициент
 
     @staticmethod
-    def DEG_P_N(poly: Polynomial) -> Natural: # проверено
-        """
-        Возвращает степень многочлена.
-
-        :param poly: Многочлен, для которого необходимо найти степень.
-        :return: Степень многочлена (Natural).
-        """
-        current = poly.head
-        max_degree = None
-
-        # Перебираем все одночлены многочлена
-        while current:
-            if max_degree is None or int(current.degree) > int(max_degree):
-                max_degree = current.degree
-            current = current.next
-
-        return max_degree
+    def DEG_P_N(poly: Polynomial) -> Natural:
+        """Возвращает степень многочлена."""
+        return poly.get_degree()  # Получаем и возвращаем степень многочлена
 
     @staticmethod
     def FAC_P_Q(poly: Polynomial) -> Rational:
-        """
-        Находит НОД числителей и НОК знаменателей коэффициентов многочлена.
+        """Находит НОД числителей и НОК знаменателей коэффициентов."""
+        if not poly.terms:  # Если многочлен пустой
+            return Rational(Integer("1"), Natural("1"))  # Возвращаем тривиальный множитель
 
-        :param poly: Многочлен
-        :return: Кортеж (НОД числителей, НОК знаменателей)
-        """
-        # Проверяем, не является ли многочлен нулевым
-        if NaturalOperations.NZER_N_B(PolynomialOperations.DEG_P_N(poly)) == "нет":
-            return Natural("1"), Natural("1")
-            
-        numerators = []
-        denominators = []
-        current = poly.head
-        
-        # Собираем числители и знаменатели
-        while current:
-            if int(current.coefficient.numerator) != 0:
-                # Обрабатываем числитель
-                num = IntegerOperations.ABS_Z_N(current.coefficient.numerator) 
-                numerators.append(num)
-                
-                # Обрабатываем знаменатель
-                denominators.append(current.coefficient.denominator)
-                
-            current = current.next
+        numerators = []  # Список числителей
+        denominators = []  # Список знаменателей
 
-        # Находим НОД числителей
-        gcd_result = numerators[0]
-        for num in numerators[1:]:
+        for coeff in poly.terms.values():  # Проходим по всем коэффициентам
+            if int(coeff.numerator) != 0:  # Если числитель не равен нулю
+                num = IntegerOperations.ABS_Z_N(coeff.numerator)  # Берем модуль числителя
+                numerators.append(num)  # Добавляем в список числителей
+                denominators.append(coeff.denominator)  # Добавляем знаменатель в список
+
+        if not numerators:  # Если числители отсутствуют
+            return Rational(Integer("1"), Natural("1"))  # Возвращаем тривиальный множитель
+
+        gcd_result = numerators[0]  # Инициализируем НОД первым числителем
+        for num in numerators[1:]:  # Вычисляем НОД числителей
             gcd_result = NaturalOperations.GCF_NN_N(gcd_result, num)
 
-        # Находим НОК знаменателей
-        lcm_result = denominators[0]
-        for den in denominators[1:]:
+        lcm_result = denominators[0]  # Инициализируем НОК первым знаменателем
+        for den in denominators[1:]:  # Вычисляем НОК знаменателей
             lcm_result = NaturalOperations.LCM_NN_N(lcm_result, den)
 
-        answer = Rational(gcd_result, lcm_result)    
-        return answer
+        return Rational(Integer(str(gcd_result)), lcm_result)  # Возвращаем НОД и НОК как рациональное число
 
     @staticmethod
     def MUL_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
-        Умножение двух многочленов.
+        Умножение двух многочленов при словарной реализации.
         """
         result_poly = Polynomial()
 
-        # Проходим по всем одночленам первого многочлена
-        current1 = poly1.head
-        while current1:
-            # Проходим по всем одночленам второго многочлена
-            current2 = poly2.head
-            while current2:
+        # Проходим по всем членам первого многочлена
+        for deg1, coeff1 in poly1.terms.items():
+            # Проходим по всем членам второго многочлена
+            for deg2, coeff2 in poly2.terms.items():
                 # Умножаем коэффициенты
-                new_coeff = RationalOperations.MUL_QQ_Q(current1.coefficient, current2.coefficient)
+                new_coeff = RationalOperations.MUL_QQ_Q(coeff1, coeff2)
 
                 # Складываем степени
-                new_degree = NaturalOperations.ADD_NN_N(current1.degree, current2.degree)
+                new_degree = deg1 + deg2
 
-                # Создаем новый одночлен сразу с нужным коэффициентом
-                temp_poly = Polynomial()
-                temp_poly.add_term(new_degree, new_coeff)
+                # Если в результате уже есть член с такой степенью, складываем коэффициенты
+                if new_degree in result_poly.terms:
+                    existing_coeff = result_poly.terms[new_degree]
+                    new_coeff = RationalOperations.ADD_QQ_Q(existing_coeff, new_coeff)
 
-                # Добавляем результат в итоговый многочлен
-                result_poly = PolynomialOperations.ADD_PP_P(result_poly, temp_poly)
-
-                current2 = current2.next
-            current1 = current1.next
+                # Добавляем новый член в результат
+                result_poly.add_term(Natural(str(new_degree)), new_coeff)
 
         return result_poly
 
     @staticmethod
-    def DIV_PP_P(dividend: Polynomial, divisor: Polynomial) -> Polynomial:
+    def DIV_PP_P(poly1: Polynomial, poly2: Polynomial) -> Polynomial:
         """
-        Деление многочлена на многочлен без остатка.
+        Деление двух многочленов poly1 и poly2. Возвращает только частное.
         """
+        if str(poly2) == "0":
+            raise ValueError("Делитель не может быть нулём.")
+
+        # Создаем пустой полином для частного
         quotient = Polynomial()
-        temp_dividend = create_polynomial(str(dividend))
-        
-        while True:
-            # Получаем степени текущих многочленов
-            dividend_deg = PolynomialOperations.DEG_P_N(temp_dividend)
-            divisor_deg = PolynomialOperations.DEG_P_N(divisor)
-            
-            # Если степень делимого меньше степени делителя - завершаем
-            if int(dividend_deg) < int(divisor_deg):
+
+        # Создаем копию делимого для работы
+        remainder = Polynomial()
+        remainder.terms = poly1.terms.copy()
+
+        # Получаем степень и коэффициент делителя
+        divisor_degree = poly2.get_degree()
+        divisor_lead_coeff = poly2.getCoeff(divisor_degree)
+
+        while remainder.terms:
+            # Сравниваем степени используя Natural
+            dividend_degree = remainder.get_degree()
+            comparison = NaturalOperations.COM_NN_D(dividend_degree, divisor_degree)
+
+            if comparison == 1:  # если степень делимого меньше степени делителя
                 break
-                
-            # Получаем старшие коэффициенты
-            dividend_coef = PolynomialOperations.LED_P_Q(temp_dividend)
-            divisor_coef = PolynomialOperations.LED_P_Q(divisor)
-            
-            # Вычисляем коэффициент и разность степеней для текущего члена частного
-            quotient_coef = RationalOperations.DIV_QQ_Q(dividend_coef, divisor_coef)
-            degree_diff = Natural(str(int(dividend_deg) - int(divisor_deg)))
-            
-            # Добавляем новый член в частное
-            quotient.add_term(degree_diff, quotient_coef)
-            
-            # Вычитаем из делимого произведение делителя на полученный член
-            temp_poly = PolynomialOperations.MUL_Pxk_P(divisor, degree_diff)
-            temp_poly = PolynomialOperations.MUL_PQ_P(temp_poly, quotient_coef)
-            temp_dividend = PolynomialOperations.SUB_PP_P(temp_dividend, temp_poly)
-            
-            # Если делимое стало нулем - завершаем
-            if str(temp_dividend) == "0":
-                break
-                
+
+            # Вычисляем степень и коэффициент для нового члена частного
+            degree_diff = NaturalOperations.SUB_NN_N(dividend_degree, divisor_degree)
+            coeff = RationalOperations.DIV_QQ_Q(
+                remainder.getCoeff(dividend_degree),
+                divisor_lead_coeff
+            )
+
+            # Добавляем член в частное
+            quotient.add_term(degree_diff, coeff)
+
+            # Создаем временный полином для вычитания
+            temp = Polynomial()
+            temp.add_term(degree_diff, coeff)
+            temp = PolynomialOperations.MUL_PP_P(poly2, temp)
+
+            # Вычитаем из остатка
+            remainder = PolynomialOperations.SUB_PP_P(remainder, temp)
+
+            # Очищаем нулевые члены
+            remainder.terms = {k:v for k,v in remainder.terms.items()
+                            if int(v.numerator) != 0}
+
         return quotient
+
 
     @staticmethod
     def MOD_PP_P(dividend: Polynomial, divisor: Polynomial) -> Polynomial:
@@ -308,67 +211,98 @@ class PolynomialOperations:
         """
         Поиск НОД двух многочленов на основе алгоритма Евклида.
         """
-
-        # Создаём копии исходных многочленов (предполагается наличие метода makePolynomial или аналогичного)
         pln1 = create_polynomial(str(poly1))
         pln2 = create_polynomial(str(poly2))
-        temp_count = 0
-        # Пока второй многочлен не равен нулю, продолжаем искать остаток и свапать
-        while str(pln2) != "0" and temp_count < 100:
-            temp = PolynomialOperations.MOD_PP_P(pln1, pln2)       
-            pln1, pln2 = pln2, temp
-            print(pln1)
-            print(pln2)
-            temp_count += 1
-        # Если старший коэффициент итогового многочлена отрицательный — домножаем на -1
-        deg = PolynomialOperations.DEG_P_N(pln1)
-        lead_coeff = pln1.getCoeff(deg)  # метод getCoeff(degree) нужно реализовать в классе Polynomial
-        if int(lead_coeff.numerator) < 0:
-            pln1 = PolynomialOperations.MUL_PQ_P(pln1, Rational(Integer("-1"), Natural("1")))
 
-        return pln1
+        if int(pln1.get_degree()) < int(pln2.get_degree()):
+            pln1, pln2 = pln2, pln1
+
+        if str(pln2) == "0":
+            return pln1
+
+        print("\nНачало поиска НОД:")
+        while True:
+            remainder = PolynomialOperations.MOD_PP_P(pln1, pln2)
+            print(f"Остаток: {remainder}")
+
+            if str(remainder) == "0":
+                break
+
+            # Находим множитель остатка и нормализуем
+            fac = PolynomialOperations.FAC_P_Q(remainder)
+            if int(fac.numerator) != 0:
+                remainder = PolynomialOperations.MUL_PQ_P(remainder,
+                                                        Rational(Integer(str(fac.denominator)),
+                                                                Natural(str(fac.numerator))))
+
+            pln1 = pln2
+            pln2 = remainder
+
+            if int(remainder.get_degree()) == 0:
+                break
+
+        # Находим общий множитель результата
+        fac = PolynomialOperations.FAC_P_Q(pln2)
+
+        # Приводим результат к нормализованному виду через умножение на полученный множитель
+        if int(fac.numerator) != 0:
+            pln2 = PolynomialOperations.MUL_PQ_P(pln2,
+                                                Rational(Integer(str(fac.denominator)),
+                                                        Natural(str(fac.numerator))))
+
+        # Делаем старший коэффициент положительным
+        lead_coeff = pln2.get_leading_coeff()
+        if int(lead_coeff.numerator) < 0:
+            pln2 = PolynomialOperations.MUL_PQ_P(pln2,
+                                                Rational(Integer("-1"), Natural("1")))
+
+        print(f"\nРезультат НОД: {pln2}")
+        return pln2
 
     @staticmethod
     def DER_P_P(poly: Polynomial) -> Polynomial:
         """
-        Находит производную многочлена.
+        Вычисляет производную многочлена.
 
-        :param poly: Многочлен.
-        :return: Производная многочлена.
+        :param poly: Исходный многочлен
+        :return: Многочлен-производная
         """
-        derivative = Polynomial()
-        current = poly.head.next  # Начинаем с первого одночлена
+        result = Polynomial()
 
-        while current:
-            degree = current.degree
-            coefficient = current.coefficient
-            # Если степень больше 0, вычисляем производную одночлена
-            if int(degree) > 0:
-                # Производная одночлена a * x^n равна a * n * x^(n-1)
-                degree_as_rat = RationalOperations.TRANS_Z_Q(IntegerOperations.TRANS_N_Z(degree))
-                new_coefficient = RationalOperations.MUL_QQ_Q(coefficient, degree_as_rat)
-                new_degree = Natural(str(int(degree) - 1))
-                derivative.add_term(new_degree, new_coefficient)
+        for degree, coeff in poly.terms.items():
+            if degree > 0:  # Производная константы равна 0
+                # Умножаем коэффициент на степень
+                new_coeff = RationalOperations.MUL_QQ_Q(
+                    coeff,
+                    Rational(Integer(str(degree)), Natural("1"))
+                )
+                # Уменьшаем степень на 1
+                result.add_term(Natural(str(degree - 1)), new_coeff)
 
-            current = current.next
-
-        return derivative
+        return result
 
     @staticmethod
     def NMR_P_P(poly: Polynomial) -> Polynomial:
         """
         Преобразование многочлена: кратные корни в простые.
 
-        :param poly: Многочлен.
-        :return: Многочлен с простыми корнями.
+        :param poly: Многочлен
+        :return: Многочлен с простыми корнями
         """
+        # Если многочлен нулевой или константа
+        if len(poly.terms) <= 1:
+            return poly
+
         # Вычисляем производную многочлена
         derivative = PolynomialOperations.DER_P_P(poly)
 
-        # Находим НОД (наибольший общий делитель) между многочленом и его производной
+        # Находим НОД многочлена и его производной
         gcd_poly = PolynomialOperations.GCF_PP_P(poly, derivative)
 
-        # Разделим исходный многочлен на НОД, чтобы избавиться от кратных корней
-        result_poly = PolynomialOperations.DIV_PP_P(poly, gcd_poly)
+        # Если НОД равен константе, значит кратных корней нет
+        if int(gcd_poly.get_degree()) == 0:
+            return poly
 
-        return result_poly
+        # Делим исходный многочлен на НОД
+        result = PolynomialOperations.DIV_PP_P(poly, gcd_poly)
+        return result
